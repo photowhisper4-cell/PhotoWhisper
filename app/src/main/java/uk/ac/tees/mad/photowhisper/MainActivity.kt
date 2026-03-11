@@ -5,13 +5,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import uk.ac.tees.mad.photowhisper.ui.theme.PhotoWhisperTheme
+import androidx.navigation.compose.rememberNavController
+import uk.ac.tees.mad.photowhisper.presentation.navigation.NavGraph
+import uk.ac.tees.mad.photowhisper.presentation.theme.PhotoWhisperTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,29 +18,13 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PhotoWhisperTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                Surface(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    val navController = rememberNavController()
+                    NavGraph(navController = navController)
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    PhotoWhisperTheme {
-        Greeting("Android")
     }
 }
