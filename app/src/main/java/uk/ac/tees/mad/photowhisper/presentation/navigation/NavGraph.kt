@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import uk.ac.tees.mad.photowhisper.presentation.splash.SplashScreen
 
 @Composable
 fun NavGraph(
@@ -16,18 +17,18 @@ fun NavGraph(
         startDestination = startDestination
     ) {
         composable(Screen.Splash.route) {
-//            SplashScreen(
-//                onNavigateToHome = {
-//                    navController.navigate(Screen.Home.route) {
-//                        popUpTo(Screen.Splash.route) { inclusive = true }
-//                    }
-//                },
-//                onNavigateToAuth = {
-//                    navController.navigate(Screen.Login.route) {
-//                        popUpTo(Screen.Splash.route) { inclusive = true }
-//                    }
-//                }
-//            )
+            SplashScreen(
+                onNavigateToHome = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                },
+                onNavigateToAuth = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                }
+            )
         }
 
         composable(Screen.Login.route) {
