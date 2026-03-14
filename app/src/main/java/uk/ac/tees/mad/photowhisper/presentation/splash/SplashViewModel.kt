@@ -6,8 +6,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import uk.ac.tees.mad.photowhisper.domain.usecase.GetCurrentUserUseCase
 
 class SplashViewModel(
+    private val getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel() {
 
     private val _navigationState = MutableStateFlow<NavigationState>(NavigationState.Loading)
@@ -21,12 +23,12 @@ class SplashViewModel(
         viewModelScope.launch {
             delay(2000)
 
-//            //val currentUser = getCurrentUserUseCase()
-//            _navigationState.value = if (currentUser != null) {
-//                NavigationState.NavigateToHome
-//            } else {
-//                NavigationState.NavigateToAuth
-//            }
+            val currentUser = getCurrentUserUseCase()
+            _navigationState.value = if (currentUser != null) {
+                NavigationState.NavigateToHome
+            } else {
+                NavigationState.NavigateToAuth
+            }
         }
     }
 

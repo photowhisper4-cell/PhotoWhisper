@@ -4,6 +4,11 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     kotlin("kapt")
 }
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+    }
+}
 
 android {
     namespace = "uk.ac.tees.mad.photowhisper"
@@ -34,9 +39,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
     buildFeatures {
         compose = true
     }
@@ -48,9 +50,8 @@ dependencies {
     implementation("io.github.jan-tennert.supabase:supabase-kt")
     implementation ("io.github.jan-tennert.supabase:postgrest-kt")
     implementation ("io.github.jan-tennert.supabase:storage-kt")
-    implementation ("io.github.jan-tennert.supabase:gotrue-kt")
     implementation("io.github.jan-tennert.supabase:auth-kt")
-    implementation ("io.ktor:ktor-client-android:2.3.7")
+    implementation ("io.ktor:ktor-client-android:3.3.3")
     implementation("androidx.compose.material:material-icons-extended:1.7.7")
 //Navigation
     implementation("androidx.navigation:navigation-compose:2.9.5")

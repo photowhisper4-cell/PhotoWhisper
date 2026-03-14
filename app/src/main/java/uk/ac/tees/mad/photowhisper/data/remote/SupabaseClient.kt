@@ -1,5 +1,6 @@
 package uk.ac.tees.mad.photowhisper.data.remote
 
+import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.storage.Storage
