@@ -12,6 +12,9 @@ import uk.ac.tees.mad.photowhisper.data.remote.AuthService
 import uk.ac.tees.mad.photowhisper.data.remote.SupabaseClient
 import uk.ac.tees.mad.photowhisper.data.repository.AuthRepositoryImpl
 import uk.ac.tees.mad.photowhisper.domain.usecase.GetCurrentUserUseCase
+import uk.ac.tees.mad.photowhisper.domain.usecase.LoginUseCase
+import uk.ac.tees.mad.photowhisper.presentation.auth.login.LoginScreen
+import uk.ac.tees.mad.photowhisper.presentation.auth.login.LoginViewModel
 
 
 import uk.ac.tees.mad.photowhisper.presentation.splash.SplashScreen
@@ -53,22 +56,22 @@ fun NavGraph(
         }
 
         composable(Screen.Login.route) {
-//            val loginUseCase = remember { LoginUseCase(authRepository) }
-//            val viewModel: LoginViewModel = viewModel {
-//                LoginViewModel(loginUseCase)
-//            }
-//
-//            LoginScreen(
-//                viewModel = viewModel,
-//                onNavigateToRegister = {
-//                    navController.navigate(Screen.Register.route)
-//                },
-//                onNavigateToHome = {
-//                    navController.navigate(Screen.Home.route) {
-//                        popUpTo(Screen.Login.route) { inclusive = true }
-//                    }
-//                }
-//            )
+            val loginUseCase = remember { LoginUseCase(authRepository) }
+            val viewModel: LoginViewModel = viewModel {
+                LoginViewModel(loginUseCase)
+            }
+
+            LoginScreen(
+                viewModel = viewModel,
+                onNavigateToRegister = {
+                    navController.navigate(Screen.Register.route)
+                },
+                onNavigateToHome = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                }
+            )
         }
 
         composable(Screen.Register.route) {

@@ -1,0 +1,22 @@
+package uk.ac.tees.mad.photowhisper.domain.usecase
+
+import uk.ac.tees.mad.photowhisper.domain.model.User
+import uk.ac.tees.mad.photowhisper.domain.repository.AuthRepository
+
+class LoginUseCase(
+    private val authRepository: AuthRepository
+) {
+    suspend operator fun invoke(email: String, password: String): Result<User> {
+        if (email.isBlank()) {
+            return Result.failure(Exception("Email cannot be empty"))
+        }
+        if (password.isBlank()) {
+            return Result.failure(Exception("Password cannot be empty"))
+        }
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            return Result.failure(Exception("Invalid email format"))
+        }
+
+        return authRepository.signIn(email, password)
+    }
+}
