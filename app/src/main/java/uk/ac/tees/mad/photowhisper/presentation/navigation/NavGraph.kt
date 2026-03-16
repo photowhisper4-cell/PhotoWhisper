@@ -13,8 +13,11 @@ import uk.ac.tees.mad.photowhisper.data.remote.SupabaseClient
 import uk.ac.tees.mad.photowhisper.data.repository.AuthRepositoryImpl
 import uk.ac.tees.mad.photowhisper.domain.usecase.GetCurrentUserUseCase
 import uk.ac.tees.mad.photowhisper.domain.usecase.LoginUseCase
+import uk.ac.tees.mad.photowhisper.domain.usecase.RegisterUseCase
 import uk.ac.tees.mad.photowhisper.presentation.auth.login.LoginScreen
 import uk.ac.tees.mad.photowhisper.presentation.auth.login.LoginViewModel
+import uk.ac.tees.mad.photowhisper.presentation.auth.register.RegisterScreen
+import uk.ac.tees.mad.photowhisper.presentation.auth.register.RegisterViewModel
 
 
 import uk.ac.tees.mad.photowhisper.presentation.splash.SplashScreen
@@ -75,22 +78,22 @@ fun NavGraph(
         }
 
         composable(Screen.Register.route) {
-//            val registerUseCase = remember { RegisterUseCase(authRepository) }
-//            val viewModel: RegisterViewModel = viewModel {
-//                RegisterViewModel(registerUseCase)
-//            }
+            val registerUseCase = remember { RegisterUseCase(authRepository) }
+            val viewModel: RegisterViewModel = viewModel {
+                RegisterViewModel(registerUseCase)
+            }
 
-//            RegisterScreen(
-//                viewModel = viewModel,
-//                onNavigateToLogin = {
-//                    navController.popBackStack()
-//                },
-//                onNavigateToHome = {
-//                    navController.navigate(Screen.Home.route) {
-//                        popUpTo(Screen.Register.route) { inclusive = true }
-//                    }
-//                }
-//            )
+            RegisterScreen(
+                viewModel = viewModel,
+                onNavigateToLogin = {
+                    navController.popBackStack()
+                },
+                onNavigateToHome = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Register.route) { inclusive = true }
+                    }
+                }
+            )
         }
 
         composable(Screen.Home.route) {

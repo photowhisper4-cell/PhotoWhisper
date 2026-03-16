@@ -26,4 +26,20 @@ Splash screen initializes the app properly
 Users can log in securely
 Authentication flow is functional and connected to backend
 
+Sprint 3 – 16-March-2026
+
+User Story:
+As a user, I want to create an account and store my data locally so that my information persists.
+Work Done:
+Implemented Register Screen
+Set up Room database for local storage
+Created data mappers for model transformations
+Built memory repository and file manager
+Outcome:
+Users can register new accounts
+Local database is functional
+Data can be stored and retrieved efficiently 
+
+
+
 
