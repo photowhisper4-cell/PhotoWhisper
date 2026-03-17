@@ -2,8 +2,8 @@ package uk.ac.tees.mad.photowhisper.data.remote
 
 
 
-import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.gotrue.auth
+import io.github.jan.supabase.gotrue.providers.builtin.Email
 import uk.ac.tees.mad.photowhisper.domain.model.User
 
 class AuthService(

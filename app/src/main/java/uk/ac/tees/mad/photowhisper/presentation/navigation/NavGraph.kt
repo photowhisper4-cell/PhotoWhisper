@@ -18,6 +18,7 @@ import uk.ac.tees.mad.photowhisper.presentation.auth.login.LoginScreen
 import uk.ac.tees.mad.photowhisper.presentation.auth.login.LoginViewModel
 import uk.ac.tees.mad.photowhisper.presentation.auth.register.RegisterScreen
 import uk.ac.tees.mad.photowhisper.presentation.auth.register.RegisterViewModel
+import uk.ac.tees.mad.photowhisper.presentation.home.HomeScreen
 
 
 import uk.ac.tees.mad.photowhisper.presentation.splash.SplashScreen
@@ -97,7 +98,7 @@ fun NavGraph(
         }
 
         composable(Screen.Home.route) {
-//            HomeScreen()
+            HomeScreen()
         }
     }
 }
