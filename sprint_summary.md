@@ -40,6 +40,21 @@ Users can register new accounts
 Local database is functional
 Data can be stored and retrieved efficiently 
 
+Sprint 4 – 20-March-2026
+
+User Story:
+As a user, I want to capture and manage media so that I can store and access my content easily.
+Work Done:
+Implemented Home Screen
+Built storage repository and AudioRecorder
+Developed Capture Screen using CameraX and Supabase
+Fixed infinite loading issue and added retrieval logic
+Outcome:
+Users can navigate through the main app flow
+Media (audio/images) can be captured and stored
+Data retrieval works without blocking issues 
+
+
 
 
 

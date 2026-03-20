@@ -7,18 +7,23 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import uk.ac.tees.mad.photowhisper.data.local.AppDatabase
 import uk.ac.tees.mad.photowhisper.data.local.PreferencesManager
 import uk.ac.tees.mad.photowhisper.data.remote.AuthService
 import uk.ac.tees.mad.photowhisper.data.remote.SupabaseClient
 import uk.ac.tees.mad.photowhisper.data.repository.AuthRepositoryImpl
+import uk.ac.tees.mad.photowhisper.data.repository.MemoryRepositoryImpl
 import uk.ac.tees.mad.photowhisper.domain.usecase.GetCurrentUserUseCase
+import uk.ac.tees.mad.photowhisper.domain.usecase.GetMemoriesUseCase
 import uk.ac.tees.mad.photowhisper.domain.usecase.LoginUseCase
+import uk.ac.tees.mad.photowhisper.domain.usecase.LogoutUseCase
 import uk.ac.tees.mad.photowhisper.domain.usecase.RegisterUseCase
 import uk.ac.tees.mad.photowhisper.presentation.auth.login.LoginScreen
 import uk.ac.tees.mad.photowhisper.presentation.auth.login.LoginViewModel
 import uk.ac.tees.mad.photowhisper.presentation.auth.register.RegisterScreen
 import uk.ac.tees.mad.photowhisper.presentation.auth.register.RegisterViewModel
 import uk.ac.tees.mad.photowhisper.presentation.home.HomeScreen
+import uk.ac.tees.mad.photowhisper.presentation.home.HomeViewModel
 
 
 import uk.ac.tees.mad.photowhisper.presentation.splash.SplashScreen
@@ -98,7 +103,30 @@ fun NavGraph(
         }
 
         composable(Screen.Home.route) {
-            HomeScreen()
+            val database = remember { AppDatabase.getDatabase(context) }
+            val memoryRepository = remember { MemoryRepositoryImpl(database.memoryDao()) }
+            val getMemoriesUseCase = remember { GetMemoriesUseCase(memoryRepository) }
+            val getCurrentUserUseCase = remember { GetCurrentUserUseCase(authRepository) }
+            val logoutUseCase = remember { LogoutUseCase(authRepository) }
+
+            val viewModel: HomeViewModel = viewModel {
+                HomeViewModel(getMemoriesUseCase, getCurrentUserUseCase, logoutUseCase)
+            }
+
+            HomeScreen(
+                viewModel = viewModel,
+                onNavigateToCapture = {
+                    navController.navigate(Screen.CaptureMemory.route)
+                },
+                onNavigateToDetail = { memoryId ->
+                    navController.navigate(Screen.MemoryDetail.createRoute(memoryId))
+                },
+                onNavigateToAuth = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }
