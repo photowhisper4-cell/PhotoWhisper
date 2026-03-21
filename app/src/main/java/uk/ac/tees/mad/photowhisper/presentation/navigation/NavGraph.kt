@@ -8,6 +8,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import uk.ac.tees.mad.photowhisper.data.local.AppDatabase
+import uk.ac.tees.mad.photowhisper.data.local.FileManager
 import uk.ac.tees.mad.photowhisper.data.local.PreferencesManager
 import uk.ac.tees.mad.photowhisper.data.remote.AuthService
 import uk.ac.tees.mad.photowhisper.data.remote.SupabaseClient
@@ -18,10 +19,13 @@ import uk.ac.tees.mad.photowhisper.domain.usecase.GetMemoriesUseCase
 import uk.ac.tees.mad.photowhisper.domain.usecase.LoginUseCase
 import uk.ac.tees.mad.photowhisper.domain.usecase.LogoutUseCase
 import uk.ac.tees.mad.photowhisper.domain.usecase.RegisterUseCase
+import uk.ac.tees.mad.photowhisper.domain.usecase.SaveMemoryUseCase
 import uk.ac.tees.mad.photowhisper.presentation.auth.login.LoginScreen
 import uk.ac.tees.mad.photowhisper.presentation.auth.login.LoginViewModel
 import uk.ac.tees.mad.photowhisper.presentation.auth.register.RegisterScreen
 import uk.ac.tees.mad.photowhisper.presentation.auth.register.RegisterViewModel
+import uk.ac.tees.mad.photowhisper.presentation.capture.CaptureMemoryScreen
+import uk.ac.tees.mad.photowhisper.presentation.capture.CaptureViewModel
 import uk.ac.tees.mad.photowhisper.presentation.home.HomeScreen
 import uk.ac.tees.mad.photowhisper.presentation.home.HomeViewModel
 
@@ -125,6 +129,25 @@ fun NavGraph(
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
+                }
+            )
+        }
+
+        composable(Screen.CaptureMemory.route) {
+            val database = remember { AppDatabase.getDatabase(context) }
+            val memoryRepository = remember { MemoryRepositoryImpl(database.memoryDao()) }
+            val saveMemoryUseCase = remember { SaveMemoryUseCase(memoryRepository) }
+            val getCurrentUserUseCase = remember { GetCurrentUserUseCase(authRepository) }
+            val fileManager = remember { FileManager(context) }
+
+            val viewModel: CaptureViewModel = viewModel {
+                CaptureViewModel(saveMemoryUseCase, getCurrentUserUseCase, fileManager)
+            }
+
+            CaptureMemoryScreen(
+                viewModel = viewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }
