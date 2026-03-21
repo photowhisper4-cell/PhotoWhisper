@@ -5,11 +5,13 @@ import kotlinx.coroutines.flow.map
 import uk.ac.tees.mad.photowhisper.data.local.dao.MemoryDao
 import uk.ac.tees.mad.photowhisper.data.mapper.toDomain
 import uk.ac.tees.mad.photowhisper.data.mapper.toEntity
+import uk.ac.tees.mad.photowhisper.data.remote.SyncService
 import uk.ac.tees.mad.photowhisper.domain.model.Memory
 import uk.ac.tees.mad.photowhisper.domain.repository.MemoryRepository
 
 class MemoryRepositoryImpl(
-    private val memoryDao: MemoryDao
+    private val memoryDao: MemoryDao,
+    private val syncService: SyncService
 ) : MemoryRepository {
 
     override fun getAllMemories(userId: String): Flow<List<Memory>> {
@@ -24,6 +26,12 @@ class MemoryRepositoryImpl(
 
     override suspend fun saveMemory(memory: Memory) {
         memoryDao.insertMemory(memory.toEntity())
+
+        try {
+            syncService.syncMemory(memory)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     override suspend fun deleteMemory(memoryId: String) {
@@ -31,6 +39,6 @@ class MemoryRepositoryImpl(
     }
 
     override suspend fun syncMemories(userId: String) {
-
+        syncService.syncAllUnsyncedMemories(userId)
     }
 }

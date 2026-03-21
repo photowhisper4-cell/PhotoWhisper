@@ -8,10 +8,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import uk.ac.tees.mad.photowhisper.data.local.AppDatabase
+import uk.ac.tees.mad.photowhisper.data.local.AudioRecorder
 import uk.ac.tees.mad.photowhisper.data.local.FileManager
 import uk.ac.tees.mad.photowhisper.data.local.PreferencesManager
 import uk.ac.tees.mad.photowhisper.data.remote.AuthService
+import uk.ac.tees.mad.photowhisper.data.remote.StorageService
 import uk.ac.tees.mad.photowhisper.data.remote.SupabaseClient
+import uk.ac.tees.mad.photowhisper.data.remote.SyncService
 import uk.ac.tees.mad.photowhisper.data.repository.AuthRepositoryImpl
 import uk.ac.tees.mad.photowhisper.data.repository.MemoryRepositoryImpl
 import uk.ac.tees.mad.photowhisper.domain.usecase.GetCurrentUserUseCase
@@ -108,7 +111,9 @@ fun NavGraph(
 
         composable(Screen.Home.route) {
             val database = remember { AppDatabase.getDatabase(context) }
-            val memoryRepository = remember { MemoryRepositoryImpl(database.memoryDao()) }
+            val storageService = remember { StorageService(SupabaseClient) }
+            val syncService = remember { SyncService(storageService, database.memoryDao()) }
+            val memoryRepository = remember { MemoryRepositoryImpl(database.memoryDao(), syncService) }
             val getMemoriesUseCase = remember { GetMemoriesUseCase(memoryRepository) }
             val getCurrentUserUseCase = remember { GetCurrentUserUseCase(authRepository) }
             val logoutUseCase = remember { LogoutUseCase(authRepository) }
@@ -135,13 +140,16 @@ fun NavGraph(
 
         composable(Screen.CaptureMemory.route) {
             val database = remember { AppDatabase.getDatabase(context) }
-            val memoryRepository = remember { MemoryRepositoryImpl(database.memoryDao()) }
+            val storageService = remember { StorageService(SupabaseClient) }
+            val syncService = remember { SyncService(storageService, database.memoryDao()) }
+            val memoryRepository = remember { MemoryRepositoryImpl(database.memoryDao(), syncService) }
             val saveMemoryUseCase = remember { SaveMemoryUseCase(memoryRepository) }
             val getCurrentUserUseCase = remember { GetCurrentUserUseCase(authRepository) }
             val fileManager = remember { FileManager(context) }
+            val audioRecorder = remember { AudioRecorder(context) }
 
             val viewModel: CaptureViewModel = viewModel {
-                CaptureViewModel(saveMemoryUseCase, getCurrentUserUseCase, fileManager)
+                CaptureViewModel(saveMemoryUseCase, getCurrentUserUseCase, fileManager, audioRecorder)
             }
 
             CaptureMemoryScreen(

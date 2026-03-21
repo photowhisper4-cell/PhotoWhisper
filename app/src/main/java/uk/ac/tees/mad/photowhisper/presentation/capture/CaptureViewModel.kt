@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import uk.ac.tees.mad.photowhisper.data.local.AudioRecorder
 import uk.ac.tees.mad.photowhisper.data.local.FileManager
 import uk.ac.tees.mad.photowhisper.domain.model.Memory
 import uk.ac.tees.mad.photowhisper.domain.usecase.GetCurrentUserUseCase
@@ -16,7 +17,8 @@ import java.util.UUID
 class CaptureViewModel(
     private val saveMemoryUseCase: SaveMemoryUseCase,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
-    private val fileManager: FileManager
+    private val fileManager: FileManager,
+    private val audioRecorder: AudioRecorder
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CaptureUiState())
@@ -41,22 +43,51 @@ class CaptureViewModel(
         }
     }
 
-    fun onAudioRecorded(audioPath: String, duration: Long) {
+    fun startRecording() {
+        try {
+            audioRecorder.startRecording()
+        } catch (e: Exception) {
+            _uiState.value = _uiState.value.copy(
+                errorMessage = "Failed to start recording: ${e.message}"
+            )
+        }
+    }
+
+    fun stopRecording() {
         viewModelScope.launch {
             try {
-                val savedAudioPath = fileManager.saveAudio(audioPath)
+                val (audioPath, duration) = audioRecorder.stopRecording()
 
-                _uiState.value = _uiState.value.copy(
-                    audioPath = savedAudioPath,
-                    audioDuration = duration,
-                    errorMessage = null
-                )
+                if (audioPath.isNotEmpty()) {
+                    _uiState.value = _uiState.value.copy(
+                        audioPath = audioPath,
+                        audioDuration = duration,
+                        errorMessage = null
+                    )
+                }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     errorMessage = "Failed to save audio: ${e.message}"
                 )
             }
         }
+    }
+
+    fun cancelRecording() {
+        audioRecorder.cancelRecording()
+    }
+
+    fun clearPhoto() {
+        _uiState.value.capturedPhotoPath?.let {
+            fileManager.deleteFile(it)
+        }
+        _uiState.value.thumbnailPath?.let {
+            fileManager.deleteFile(it)
+        }
+        _uiState.value = _uiState.value.copy(
+            capturedPhotoPath = null,
+            thumbnailPath = null
+        )
     }
 
     fun onSaveMemory(onSuccess: () -> Unit) {
@@ -115,8 +146,19 @@ class CaptureViewModel(
         }
     }
 
+    fun onError(message: String) {
+        _uiState.value = _uiState.value.copy(errorMessage = message)
+    }
+
     fun clearError() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        if (audioRecorder.isRecording()) {
+            audioRecorder.cancelRecording()
+        }
     }
 }
 
