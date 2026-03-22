@@ -3,6 +3,7 @@ package uk.ac.tees.mad.photowhisper.data.remote
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.gotrue.Auth
+import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.storage.Storage
 
 
@@ -16,5 +17,6 @@ object SupabaseClient {
     ) {
         install(Auth)
         install(Storage)
+        install(Postgrest)
     }
 }

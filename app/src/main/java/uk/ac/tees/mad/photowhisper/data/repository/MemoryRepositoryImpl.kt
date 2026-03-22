@@ -28,7 +28,7 @@ class MemoryRepositoryImpl(
         memoryDao.insertMemory(memory.toEntity())
 
         try {
-            syncService.syncMemory(memory)
+            syncService.syncMemoryToCloud(memory)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -39,6 +39,11 @@ class MemoryRepositoryImpl(
     }
 
     override suspend fun syncMemories(userId: String) {
-        syncService.syncAllUnsyncedMemories(userId)
+        try {
+            syncService.syncMemoriesFromCloud(userId)
+            syncService.syncAllUnsyncedMemories(userId)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }

@@ -51,6 +51,7 @@ dependencies {
     implementation("io.github.jan-tennert.supabase:compose-auth-ui")
     implementation("io.github.jan-tennert.supabase:storage-kt")
     implementation("io.ktor:ktor-client-cio:2.3.12")
+    implementation("io.github.jan-tennert.supabase:postgrest-kt") // 👈 Postgres (DB)
     implementation("androidx.compose.material:material-icons-extended:1.7.7")
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.9.5")

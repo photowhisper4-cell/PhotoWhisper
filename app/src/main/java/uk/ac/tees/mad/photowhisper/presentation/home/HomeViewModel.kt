@@ -2,11 +2,13 @@ package uk.ac.tees.mad.photowhisper.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import uk.ac.tees.mad.photowhisper.domain.model.Memory
+import uk.ac.tees.mad.photowhisper.domain.repository.MemoryRepository
 import uk.ac.tees.mad.photowhisper.domain.usecase.GetCurrentUserUseCase
 import uk.ac.tees.mad.photowhisper.domain.usecase.GetMemoriesUseCase
 import uk.ac.tees.mad.photowhisper.domain.usecase.LogoutUseCase
@@ -14,17 +16,18 @@ import uk.ac.tees.mad.photowhisper.domain.usecase.LogoutUseCase
 class HomeViewModel(
     private val getMemoriesUseCase: GetMemoriesUseCase,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
-    private val logoutUseCase: LogoutUseCase
+    private val logoutUseCase: LogoutUseCase,
+    private val memoryRepository: MemoryRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
-        loadMemories()
+        syncAndLoadMemories()
     }
 
-    private fun loadMemories() {
+    private fun syncAndLoadMemories() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
 
@@ -36,6 +39,13 @@ class HomeViewModel(
                         isLoading = false,
                         userEmail = currentUser.email
                     )
+                }
+
+                viewModelScope.launch(Dispatchers.IO) {
+                    try {
+                        memoryRepository.syncMemories(currentUser.id)
+                    } catch (e: Exception) {
+                    }
                 }
             } else {
                 _uiState.value = _uiState.value.copy(isLoading = false)
@@ -50,6 +60,10 @@ class HomeViewModel(
                 onSuccess()
             }
         }
+    }
+
+    fun refreshMemories() {
+        syncAndLoadMemories()
     }
 }
 

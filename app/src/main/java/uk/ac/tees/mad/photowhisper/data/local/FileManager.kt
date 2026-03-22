@@ -28,6 +28,10 @@ class FileManager(private val context: Context) {
         }
     }
 
+    fun getPhotoDirectory(): String = photoDirectory.absolutePath
+
+    fun getAudioDirectory(): String = audioDirectory.absolutePath
+
     fun savePhoto(uri: Uri): String {
         val fileName = "${UUID.randomUUID()}.jpg"
         val file = File(photoDirectory, fileName)
@@ -53,11 +57,19 @@ class FileManager(private val context: Context) {
     }
 
     fun saveThumbnail(photoPath: String): String {
-        val fileName = "${UUID.randomUUID()}_thumb.jpg"
+        val photoFile = File(photoPath)
+        val fileName = "${photoFile.nameWithoutExtension}_thumb.jpg"
         val file = File(thumbnailDirectory, fileName)
 
+        if (file.exists()) {
+            return file.absolutePath
+        }
+
         val bitmap = BitmapFactory.decodeFile(photoPath)
-        val thumbnail = Bitmap.createScaledBitmap(bitmap, 200, 200, true)
+        val aspectRatio = bitmap.width.toFloat() / bitmap.height.toFloat()
+        val thumbnailWidth = 200
+        val thumbnailHeight = (thumbnailWidth / aspectRatio).toInt()
+        val thumbnail = Bitmap.createScaledBitmap(bitmap, thumbnailWidth, thumbnailHeight, true)
 
         FileOutputStream(file).use { output ->
             thumbnail.compress(Bitmap.CompressFormat.JPEG, 80, output)
@@ -69,11 +81,16 @@ class FileManager(private val context: Context) {
         return file.absolutePath
     }
 
+    fun getThumbnailPath(memoryId: String): String {
+        return File(thumbnailDirectory, "${memoryId}_thumb.jpg").absolutePath
+    }
+
     fun saveAudio(sourcePath: String): String {
-        val fileName = "${UUID.randomUUID()}.m4a"
+        val sourceFile = File(sourcePath)
+        val fileName = "${UUID.randomUUID()}.${sourceFile.extension}"
         val file = File(audioDirectory, fileName)
 
-        File(sourcePath).copyTo(file, overwrite = true)
+        sourceFile.copyTo(file, overwrite = true)
 
         return file.absolutePath
     }
@@ -82,12 +99,21 @@ class FileManager(private val context: Context) {
         File(path).delete()
     }
 
+    fun fileExists(path: String): Boolean {
+        return File(path).exists()
+    }
+
     fun clearCache() {
         thumbnailDirectory.listFiles()?.forEach { it.delete() }
     }
 
-    fun getPhotoFile(path: String): File? {
-        val file = File(path)
+    fun getPhotoFile(fileName: String): File? {
+        val file = File(photoDirectory, fileName)
+        return if (file.exists()) file else null
+    }
+
+    fun getAudioFile(fileName: String): File? {
+        val file = File(audioDirectory, fileName)
         return if (file.exists()) file else null
     }
 }
