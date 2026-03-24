@@ -1,7 +1,9 @@
 package uk.ac.tees.mad.photowhisper.data.remote
 
+import kotlinx.coroutines.flow.first
 import uk.ac.tees.mad.photowhisper.data.local.FileManager
 import uk.ac.tees.mad.photowhisper.data.local.dao.MemoryDao
+import uk.ac.tees.mad.photowhisper.data.mapper.toDomain
 import uk.ac.tees.mad.photowhisper.data.mapper.toEntity
 import uk.ac.tees.mad.photowhisper.data.remote.dto.MemoryDto
 import uk.ac.tees.mad.photowhisper.domain.model.Memory
@@ -71,31 +73,25 @@ class SyncService(
             cloudMemories.forEach { dto ->
                 val existingMemory = memoryDao.getMemoryById(dto.id)
 
-                val localPhotoPath = if (existingMemory?.localPhotoPath != null) {
+                val localPhotoPath = if (existingMemory?.localPhotoPath != null && fileManager.fileExists(existingMemory.localPhotoPath)) {
                     existingMemory.localPhotoPath
+                } else if (dto.photoUrl.isNotEmpty()) {
+                    val newPath = "${fileManager.getPhotoDirectory()}/${dto.id}.jpg"
+                    val downloadResult = storageService.downloadPhoto(dto.photoUrl, newPath)
+                    if (downloadResult.isSuccess) newPath else null
                 } else {
-                    val path = fileManager.getPhotoFile("${dto.id}.jpg")?.absolutePath
-                    if (path == null && dto.photoUrl.isNotEmpty()) {
-                        val newPath = "${fileManager.getPhotoDirectory()}/${dto.id}.jpg"
-                        storageService.downloadPhoto(dto.photoUrl, newPath)
-                        newPath
-                    } else {
-                        path
-                    }
+                    null
                 }
 
-                val localAudioPath = if (existingMemory?.localAudioPath != null) {
+                val localAudioPath = if (existingMemory?.localAudioPath != null && fileManager.fileExists(existingMemory.localAudioPath)) {
                     existingMemory.localAudioPath
+                } else if (dto.audioUrl.isNotEmpty()) {
+                    val extension = dto.audioUrl.substringAfterLast(".").substringBefore("?")
+                    val newPath = "${fileManager.getAudioDirectory()}/${dto.id}.$extension"
+                    val downloadResult = storageService.downloadAudio(dto.audioUrl, newPath)
+                    if (downloadResult.isSuccess) newPath else null
                 } else {
-                    val extension = dto.audioUrl.substringAfterLast(".")
-                    val path = fileManager.getAudioFile("${dto.id}.$extension")?.absolutePath
-                    if (path == null && dto.audioUrl.isNotEmpty()) {
-                        val newPath = "${fileManager.getAudioDirectory()}/${dto.id}.$extension"
-                        storageService.downloadAudio(dto.audioUrl, newPath)
-                        newPath
-                    } else {
-                        path
-                    }
+                    null
                 }
 
                 val thumbnailPath = if (localPhotoPath != null) {
@@ -136,27 +132,10 @@ class SyncService(
 
     suspend fun syncAllUnsyncedMemories(userId: String): Result<Int> {
         return try {
-            val unsyncedMemories = mutableListOf<Memory>()
-
-            memoryDao.getAllMemoriesForUser(userId).collect { memories ->
-                unsyncedMemories.addAll(
-                    memories.filter { !it.isSynced }.map { entity ->
-                        Memory(
-                            id = entity.id,
-                            userId = entity.userId,
-                            photoUrl = entity.photoUrl,
-                            audioUrl = entity.audioUrl,
-                            thumbnailUrl = entity.thumbnailUrl,
-                            dateCaptured = entity.dateCaptured,
-                            location = entity.location,
-                            cameraInfo = entity.cameraInfo,
-                            isSynced = entity.isSynced,
-                            localPhotoPath = entity.localPhotoPath,
-                            localAudioPath = entity.localAudioPath
-                        )
-                    }
-                )
-            }
+            val allMemories = memoryDao.getAllMemoriesForUser(userId).first()
+            val unsyncedMemories = allMemories
+                .filter { !it.isSynced }
+                .map { it.toDomain() }
 
             var syncedCount = 0
             unsyncedMemories.forEach { memory ->

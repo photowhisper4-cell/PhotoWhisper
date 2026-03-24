@@ -54,6 +54,21 @@ Users can navigate through the main app flow
 Media (audio/images) can be captured and stored
 Data retrieval works without blocking issues 
 
+Sprint 5 – 24-March-2026
+
+User Story:
+As a user, I want a polished app with full functionality so that I have a complete and smooth experience.
+Work Done:
+Fixed loading and synchronization issues
+Implemented Details Screen with argument passing and AudioPlayer
+Fixed Splash ViewModel reliability issues
+Built Profile Screen and finalized app icon
+Outcome:
+App is stable and responsive
+Users can view details and play audio
+UI/UX is polished and production-ready 
+
+
 
 
 

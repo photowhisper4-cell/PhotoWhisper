@@ -2,7 +2,6 @@ package uk.ac.tees.mad.photowhisper.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,32 +22,47 @@ class HomeViewModel(
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    private var currentUserId: String? = null
+
     init {
         syncAndLoadMemories()
     }
 
     private fun syncAndLoadMemories() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
-            val currentUser = getCurrentUserUseCase()
-            if (currentUser != null) {
-                getMemoriesUseCase(currentUser.id).collect { memories ->
-                    _uiState.value = _uiState.value.copy(
-                        memories = memories,
-                        isLoading = false,
-                        userEmail = currentUser.email
-                    )
-                }
+            try {
+                val currentUser = getCurrentUserUseCase()
+                if (currentUser != null) {
+                    currentUserId = currentUser.id
 
-                viewModelScope.launch(Dispatchers.IO) {
                     try {
                         memoryRepository.syncMemories(currentUser.id)
                     } catch (e: Exception) {
+                        e.printStackTrace()
                     }
+
+                    getMemoriesUseCase(currentUser.id).collect { memories ->
+                        _uiState.value = _uiState.value.copy(
+                            memories = memories,
+                            isLoading = false,
+                            userEmail = currentUser.email,
+                            errorMessage = null
+                        )
+                    }
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "User not logged in"
+                    )
                 }
-            } else {
-                _uiState.value = _uiState.value.copy(isLoading = false)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Failed to load memories: ${e.message}"
+                )
             }
         }
     }
@@ -63,12 +77,31 @@ class HomeViewModel(
     }
 
     fun refreshMemories() {
-        syncAndLoadMemories()
+        if (currentUserId != null) {
+            viewModelScope.launch {
+                _uiState.value = _uiState.value.copy(isLoading = true)
+
+                try {
+                    memoryRepository.syncMemories(currentUserId!!)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+
+                _uiState.value = _uiState.value.copy(isLoading = false)
+            }
+        } else {
+            syncAndLoadMemories()
+        }
+    }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(errorMessage = null)
     }
 }
 
 data class HomeUiState(
     val memories: List<Memory> = emptyList(),
     val isLoading: Boolean = false,
-    val userEmail: String = ""
+    val userEmail: String = "",
+    val errorMessage: String? = null
 )
