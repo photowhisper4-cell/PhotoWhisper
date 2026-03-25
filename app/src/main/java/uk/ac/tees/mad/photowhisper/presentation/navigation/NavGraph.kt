@@ -6,7 +6,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import uk.ac.tees.mad.photowhisper.data.local.PreferencesManager
 import uk.ac.tees.mad.photowhisper.data.remote.AuthService
 import uk.ac.tees.mad.photowhisper.data.remote.SupabaseClient
@@ -19,6 +21,7 @@ import uk.ac.tees.mad.photowhisper.presentation.auth.login.LoginViewModel
 import uk.ac.tees.mad.photowhisper.presentation.auth.register.RegisterScreen
 import uk.ac.tees.mad.photowhisper.presentation.auth.register.RegisterViewModel
 import uk.ac.tees.mad.photowhisper.data.local.AppDatabase
+import uk.ac.tees.mad.photowhisper.data.local.AudioPlayer
 import uk.ac.tees.mad.photowhisper.data.local.AudioRecorder
 import uk.ac.tees.mad.photowhisper.data.local.FileManager
 import uk.ac.tees.mad.photowhisper.data.remote.DatabaseService
@@ -30,6 +33,8 @@ import uk.ac.tees.mad.photowhisper.domain.usecase.LogoutUseCase
 import uk.ac.tees.mad.photowhisper.domain.usecase.SaveMemoryUseCase
 import uk.ac.tees.mad.photowhisper.presentation.capture.CaptureMemoryScreen
 import uk.ac.tees.mad.photowhisper.presentation.capture.CaptureViewModel
+import uk.ac.tees.mad.photowhisper.presentation.detail.MemoryDetailScreen
+import uk.ac.tees.mad.photowhisper.presentation.detail.MemoryDetailViewModel
 import uk.ac.tees.mad.photowhisper.presentation.home.HomeScreen
 import uk.ac.tees.mad.photowhisper.presentation.home.HomeViewModel
 import uk.ac.tees.mad.photowhisper.presentation.splash.SplashScreen
@@ -155,6 +160,36 @@ fun NavGraph(
             }
 
             CaptureMemoryScreen(
+                viewModel = viewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Screen.MemoryDetail.route,
+            arguments = listOf(
+                navArgument("memoryId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val memoryId = backStackEntry.arguments?.getString("memoryId") ?: return@composable
+
+            val database = remember { AppDatabase.getDatabase(context) }
+            val fileManager = remember { FileManager(context) }
+            val storageService = remember { StorageService(SupabaseClient) }
+            val databaseService = remember { DatabaseService(SupabaseClient) }
+            val syncService = remember { SyncService(storageService, databaseService, database.memoryDao(), fileManager) }
+            val memoryRepository = remember { MemoryRepositoryImpl(database.memoryDao(), syncService) }
+            val audioPlayer = remember { AudioPlayer(context) }
+
+            val viewModel: MemoryDetailViewModel = viewModel(
+                key = memoryId
+            ) {
+                MemoryDetailViewModel(memoryRepository, audioPlayer, memoryId)
+            }
+
+            MemoryDetailScreen(
                 viewModel = viewModel,
                 onNavigateBack = {
                     navController.popBackStack()
