@@ -1,7 +1,6 @@
 package uk.ac.tees.mad.photowhisper.presentation.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -38,6 +37,8 @@ import uk.ac.tees.mad.photowhisper.presentation.detail.MemoryDetailScreen
 import uk.ac.tees.mad.photowhisper.presentation.detail.MemoryDetailViewModel
 import uk.ac.tees.mad.photowhisper.presentation.home.HomeScreen
 import uk.ac.tees.mad.photowhisper.presentation.home.HomeViewModel
+import uk.ac.tees.mad.photowhisper.presentation.profile.ProfileScreen
+import uk.ac.tees.mad.photowhisper.presentation.profile.ProfileViewModel
 import uk.ac.tees.mad.photowhisper.presentation.splash.SplashScreen
 import uk.ac.tees.mad.photowhisper.presentation.splash.SplashViewModel
 
@@ -58,7 +59,7 @@ fun NavGraph(
         composable(Screen.Splash.route) {
             val getCurrentUserUseCase = remember { GetCurrentUserUseCase(authRepository) }
             val viewModel: SplashViewModel = viewModel {
-                SplashViewModel(getCurrentUserUseCase)
+                SplashViewModel(getCurrentUserUseCase, preferencesManager)
             }
 
             SplashScreen(
@@ -140,6 +141,31 @@ fun NavGraph(
                 onNavigateToAuth = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                },
+                onNavigateToProfile = {
+                    navController.navigate(Screen.Profile.route)
+                }
+            )
+        }
+
+        composable(Screen.Profile.route) {
+            val fileManager = remember { FileManager(context) }
+            val getCurrentUserUseCase = remember { GetCurrentUserUseCase(authRepository) }
+            val logoutUseCase = remember { LogoutUseCase(authRepository) }
+
+            val viewModel: ProfileViewModel = viewModel {
+                ProfileViewModel(getCurrentUserUseCase, logoutUseCase, fileManager)
+            }
+
+            ProfileScreen(
+                viewModel = viewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToAuth = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             )
