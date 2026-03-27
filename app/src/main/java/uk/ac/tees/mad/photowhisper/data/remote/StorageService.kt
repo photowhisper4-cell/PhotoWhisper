@@ -12,7 +12,32 @@ class StorageService(
         const val PHOTOS_BUCKET = "photos"
         const val AUDIO_BUCKET = "audio"
     }
+    suspend fun deletePhoto(userId: String, photoId: String): Result<Unit> {
+        return try {
+            val fileName = "$userId/$photoId.jpg"
+            storage.from(PHOTOS_BUCKET).delete(listOf(fileName))
+            Result.success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
 
+    suspend fun deleteAudio(userId: String, audioId: String, audioUrl: String): Result<Unit> {
+        return try {
+            // Extract the exact filename (with extension) from the URL,
+            // mirroring how downloadAudio() resolves the path
+            val pathParts = audioUrl.split("/")
+            val fileName = pathParts.last()          // e.g. "audioId.m4a"
+            val fullPath = "$userId/$fileName"       // e.g. "userId/audioId.m4a"
+
+            storage.from(AUDIO_BUCKET).delete(listOf(fullPath))
+            Result.success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
     suspend fun uploadPhoto(userId: String, photoPath: String, photoId: String): Result<String> {
         return try {
             val file = File(photoPath)

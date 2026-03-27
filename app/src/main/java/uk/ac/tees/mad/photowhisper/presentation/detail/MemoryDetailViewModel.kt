@@ -1,3 +1,5 @@
+// presentation/detail/MemoryDetailViewModel.kt
+
 package uk.ac.tees.mad.photowhisper.presentation.detail
 
 import androidx.lifecycle.ViewModel
@@ -23,11 +25,9 @@ class MemoryDetailViewModel(
         loadMemory()
     }
 
-
     private fun loadMemory() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
-
             try {
                 val memory = memoryRepository.getMemoryById(memoryId)
                 if (memory != null) {
@@ -51,6 +51,38 @@ class MemoryDetailViewModel(
         }
     }
 
+    // ── NEW ──────────────────────────────────────────────────────────────────
+
+    fun onDeleteMemory() {
+        _uiState.value = _uiState.value.copy(showDeleteDialog = true)
+    }
+
+    fun onDismissDeleteDialog() {
+        _uiState.value = _uiState.value.copy(showDeleteDialog = false)
+    }
+
+    fun onConfirmDelete(onDeleted: () -> Unit) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                showDeleteDialog = false,
+                isDeleting = true
+            )
+            try {
+                audioPlayer.release()
+                memoryRepository.deleteMemoryWithFiles(memoryId)
+                _uiState.value = _uiState.value.copy(isDeleting = false)
+                onDeleted()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isDeleting = false,
+                    errorMessage = "Failed to delete memory: ${e.message}"
+                )
+            }
+        }
+    }
+
+    // ── Existing ─────────────────────────────────────────────────────────────
+
     private fun getAudioDuration(audioPath: String?): Int {
         return try {
             if (audioPath != null) {
@@ -61,23 +93,17 @@ class MemoryDetailViewModel(
                 val duration = player.duration
                 player.release()
                 duration
-            } else {
-                0
-            }
-        } catch (e: Exception) {
-            0
-        }
+            } else 0
+        } catch (e: Exception) { 0 }
     }
 
     fun onPlayPauseAudio() {
         val currentState = _uiState.value
         val audioPath = currentState.memory?.localAudioPath
-
         if (audioPath == null) {
             _uiState.value = currentState.copy(errorMessage = "Audio file not found")
             return
         }
-
         try {
             if (currentState.isPlaying) {
                 audioPlayer.pause()
@@ -87,10 +113,7 @@ class MemoryDetailViewModel(
                     audioPlayer.resume()
                 } else {
                     audioPlayer.play(audioPath) {
-                        _uiState.value = _uiState.value.copy(
-                            isPlaying = false,
-                            currentPosition = 0
-                        )
+                        _uiState.value = _uiState.value.copy(isPlaying = false, currentPosition = 0)
                     }
                 }
                 _uiState.value = currentState.copy(isPlaying = true)
@@ -132,6 +155,8 @@ class MemoryDetailViewModel(
 data class MemoryDetailUiState(
     val memory: Memory? = null,
     val isLoading: Boolean = false,
+    val isDeleting: Boolean = false,        // NEW
+    val showDeleteDialog: Boolean = false,  // NEW
     val isPlaying: Boolean = false,
     val currentPosition: Int = 0,
     val audioDuration: Int = 0,

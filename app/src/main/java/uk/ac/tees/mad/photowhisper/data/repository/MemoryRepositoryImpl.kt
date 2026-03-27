@@ -38,6 +38,28 @@ class MemoryRepositoryImpl(
         memoryDao.deleteMemory(memoryId)
     }
 
+    override suspend fun deleteMemoryWithFiles(memoryId: String) {
+        // 1. Fetch memory first so we have userId + URLs before deleting locally
+        val memory = memoryDao.getMemoryById(memoryId)?.toDomain()
+
+        // 2. Delete from Supabase Storage + database row (best-effort)
+        if (memory != null) {
+            try {
+                syncService.deleteMemoryFromCloud(
+                    memoryId = memoryId,
+                    userId   = memory.userId,
+                    photoUrl = memory.photoUrl,
+                    audioUrl = memory.audioUrl
+                )
+            } catch (e: Exception) {
+                e.printStackTrace() // cloud failure won't block local delete
+            }
+        }
+
+        // 3. Always delete from local Room DB
+        memoryDao.deleteMemory(memoryId)
+    }
+
     override suspend fun syncMemories(userId: String) {
         try {
             syncService.syncMemoriesFromCloud(userId)

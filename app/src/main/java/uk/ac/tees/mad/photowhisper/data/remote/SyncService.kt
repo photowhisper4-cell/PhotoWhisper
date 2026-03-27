@@ -65,6 +65,33 @@ class SyncService(
         }
     }
 
+    suspend fun deleteMemoryFromCloud(
+        memoryId: String,
+        userId: String,
+        photoUrl: String?,
+        audioUrl: String?
+    ) {
+        // 1. Delete photo from Supabase Storage
+        if (!photoUrl.isNullOrEmpty()) {
+            storageService.deletePhoto(
+                userId  = userId,
+                photoId = memoryId
+            ).onFailure { it.printStackTrace() }
+        }
+
+        // 2. Delete audio from Supabase Storage
+        if (!audioUrl.isNullOrEmpty()) {
+            storageService.deleteAudio(
+                userId   = userId,
+                audioId  = memoryId,
+                audioUrl = audioUrl          // needed to resolve the extension
+            ).onFailure { it.printStackTrace() }
+        }
+
+        // 3. Delete the row from Supabase database
+        databaseService.deleteMemory(memoryId)
+            .onFailure { it.printStackTrace() }
+    }
     suspend fun syncMemoriesFromCloud(userId: String): Result<List<Memory>> {
         return try {
             val cloudMemories = databaseService.getMemoriesForUser(userId).getOrThrow()

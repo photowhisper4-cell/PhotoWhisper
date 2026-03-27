@@ -8,5 +8,6 @@ interface MemoryRepository {
     suspend fun getMemoryById(memoryId: String): Memory?
     suspend fun saveMemory(memory: Memory)
     suspend fun deleteMemory(memoryId: String)
+    suspend fun deleteMemoryWithFiles(memoryId: String)
     suspend fun syncMemories(userId: String)
 }
